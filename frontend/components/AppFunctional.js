@@ -1,18 +1,19 @@
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
 
-// önerilen başlangıç stateleri
-const initialIndex = 4; //  "B" nin bulunduğu indexi
+const initialIndex = 4;
 const initialSteps = 0;
 const initialMessage = "";
 const initialEmail = "";
 
 export default function AppFunctional(props) {
+  // useState hooks
   const [index, setIndex] = useState(initialIndex);
   const [steps, setSteps] = useState(initialSteps);
   const [message, setMessage] = useState(initialMessage);
   const [email, setEmail] = useState(initialEmail);
 
+  // Variables
   const grids = [
     [1, 1],
     [2, 1],
@@ -25,17 +26,31 @@ export default function AppFunctional(props) {
     [3, 3],
   ];
 
+  const conditions = {
+    up: {
+      coord: [0, 1, 2],
+      errorMessage: "Yukarıya gidemezsiniz",
+    },
+    down: {
+      coord: [6, 7, 8],
+      errorMessage: "Aşağıya gidemezsiniz",
+    },
+    left: {
+      coord: [0, 3, 6],
+      errorMessage: "Sola gidemezsiniz",
+    },
+    right: {
+      coord: [2, 5, 8],
+      errorMessage: "Sağa gidemezsiniz",
+    },
+  };
+
+  // Functions
   function getXY(grids, index) {
-    // Koordinatları izlemek için bir state e sahip olmak gerekli değildir.
-    // Bunları hesaplayabilmek için "B" nin hangi indexte olduğunu bilmek yeterlidir.
     return [grids[index][0], grids[index][1]];
   }
 
-  function getXYMesaj(getXY, grids, index, steps) {
-    // Kullanıcı için "Koordinatlar (2, 2)" mesajını izlemek için bir state'in olması gerekli değildir.
-    // Koordinatları almak için yukarıdaki "getXY" helperını ve ardından "getXYMesaj"ı kullanabilirsiniz.
-    // tamamen oluşturulmuş stringi döndürür.
-
+  function getXYMessage(getXY, grids, index, steps) {
     const info = [];
     const [x, y] = getXY(grids, index);
     info[0] = `(${x}, ${y})`;
@@ -44,36 +59,13 @@ export default function AppFunctional(props) {
   }
 
   function reset() {
-    // Tüm stateleri başlangıç ​​değerlerine sıfırlamak için bu helperı kullanın.
     setIndex(initialIndex);
     setSteps(initialSteps);
     setEmail(initialEmail);
     setMessage(initialMessage);
   }
 
-  function sonrakiIndex(direction) {
-    // Bu helper bir yön ("sol", "yukarı", vb.) alır ve "B" nin bir sonraki indeksinin ne olduğunu hesaplar.
-    // Gridin kenarına ulaşıldığında başka gidecek yer olmadığı için,
-    // şu anki indeksi değiştirmemeli.
-    const conditions = {
-      up: {
-        coord: [0, 1, 2],
-        errorMessage: "Yukarıya gidemezsiniz",
-      },
-      down: {
-        coord: [6, 7, 8],
-        errorMessage: "Aşağıya gidemezsiniz",
-      },
-      left: {
-        coord: [0, 3, 6],
-        errorMessage: "Sola gidemezsiniz",
-      },
-      right: {
-        coord: [2, 5, 8],
-        errorMessage: "Sağa gidemezsiniz",
-      },
-    };
-
+  function move(direction) {
     const error = conditions[direction]["coord"].includes(index)
       ? conditions[direction]["errorMessage"]
       : null;
@@ -97,21 +89,11 @@ export default function AppFunctional(props) {
     }
   }
 
-  useEffect(() => {
-    setMessage(initialMessage);
-  }, [index]);
-
-  function ilerle(evt) {
-    // Bu event handler, "B" için yeni bir dizin elde etmek üzere yukarıdaki yardımcıyı kullanabilir,
-    // ve buna göre state i değiştirir.
-  }
-
   function onChange(e) {
     setEmail(e.target.value);
   }
 
   function onSubmit(e) {
-    // payloadu POST etmek için bir submit handlera da ihtiyacınız var.
     e.preventDefault();
     const [x, y] = getXY(grids, index);
     axios
@@ -123,7 +105,6 @@ export default function AppFunctional(props) {
       })
       .then((res) => {
         setMessage(res.data.message);
-        console.log(res);
       })
       .catch((err) => {
         setMessage(err.response.data.message);
@@ -131,14 +112,19 @@ export default function AppFunctional(props) {
     setEmail(initialEmail);
   }
 
+  // useEffect hooks
+  useEffect(() => {
+    setMessage(initialMessage);
+  }, [index]);
+
   return (
     <div id="wrapper" className={props.className}>
       <div className="info">
         <h3 id="coordinates">
-          Koordinatlar {getXYMesaj(getXY, grids, index, steps)[0]}
+          Koordinatlar {getXYMessage(getXY, grids, index, steps)[0]}
         </h3>
         <h3 id="steps">
-          {getXYMesaj(getXY, grids, index, steps)[1]} kere ilerlediniz
+          {getXYMessage(getXY, grids, index, steps)[1]} kere ilerlediniz
         </h3>
       </div>
       <div id="grid">
@@ -152,16 +138,16 @@ export default function AppFunctional(props) {
         <h3 id="message">{message}</h3>
       </div>
       <div id="keypad">
-        <button id="left" onClick={() => sonrakiIndex("left")}>
+        <button id="left" onClick={() => move("left")}>
           SOL
         </button>
-        <button id="up" onClick={() => sonrakiIndex("up")}>
+        <button id="up" onClick={() => move("up")}>
           YUKARI
         </button>
-        <button id="right" onClick={() => sonrakiIndex("right")}>
+        <button id="right" onClick={() => move("right")}>
           SAĞ
         </button>
-        <button id="down" onClick={() => sonrakiIndex("down")}>
+        <button id="down" onClick={() => move("down")}>
           AŞAĞI
         </button>
         <button id="reset" onClick={reset}>
