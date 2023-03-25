@@ -1,9 +1,9 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // önerilen başlangıç stateleri
 const initialIndex = 4; //  "B" nin bulunduğu indexi
-const initialSteps = -1;
+const initialSteps = 0;
 const initialMessage = "";
 const initialEmail = "";
 
@@ -31,7 +31,6 @@ export default function AppFunctional(props) {
     return [grids[index][0], grids[index][1]];
   }
 
-  console.log(getXY(grids, index)[0]);
   function getXYMesaj(getXY, grids, index, steps) {
     // Kullanıcı için "Koordinatlar (2, 2)" mesajını izlemek için bir state'in olması gerekli değildir.
     // Koordinatları almak için yukarıdaki "getXY" helperını ve ardından "getXYMesaj"ı kullanabilirsiniz.
@@ -84,18 +83,22 @@ export default function AppFunctional(props) {
     } else {
       if (direction === "up") {
         setIndex(index - 3);
+        setSteps(steps + 1);
       } else if (direction === "down") {
         setIndex(index + 3);
+        setSteps(steps + 1);
       } else if (direction === "left") {
         setIndex(index - 1);
+        setSteps(steps + 1);
       } else if (direction === "right") {
         setIndex(index + 1);
+        setSteps(steps + 1);
       }
     }
   }
 
   useEffect(() => {
-    setSteps(steps + 1);
+    setMessage(initialMessage);
   }, [index]);
 
   function ilerle(evt) {
@@ -104,30 +107,28 @@ export default function AppFunctional(props) {
   }
 
   function onChange(e) {
-    console.log(e.target.value);
-
     setEmail(e.target.value);
   }
 
   function onSubmit(e) {
-    if (email === "") {
-      setMessage("Ouch: email is required      ");
-    } else {
-      // payloadu POST etmek için bir submit handlera da ihtiyacınız var.
-      e.preventDefault();
-      const [x, y] = getXY(grids, index);
-      axios
-        .post("http://localhost:9000/api/result", {
-          x,
-          y,
-          steps,
-          email,
-        })
-        .then((res) => {
-          setMessage(res.data.message);
-        });
-      reset();
-    }
+    // payloadu POST etmek için bir submit handlera da ihtiyacınız var.
+    e.preventDefault();
+    const [x, y] = getXY(grids, index);
+    axios
+      .post("http://localhost:9000/api/result", {
+        x,
+        y,
+        steps,
+        email,
+      })
+      .then((res) => {
+        setMessage(res.data.message);
+        console.log(res);
+      })
+      .catch((err) => {
+        setMessage(err.response.data.message);
+      });
+    setEmail(initialEmail);
   }
 
   return (
@@ -170,7 +171,7 @@ export default function AppFunctional(props) {
       <form onSubmit={onSubmit}>
         <input
           id="email"
-          type="email"
+          type="text"
           placeholder="email girin"
           value={email}
           onChange={onChange}
