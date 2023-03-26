@@ -161,6 +161,7 @@ export default function AppFunctional(props) {
           placeholder="email girin"
           value={email}
           onChange={onChange}
+          data-testid="email"
         ></input>
         <input id="submit" type="submit"></input>
       </form>
