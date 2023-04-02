@@ -110,6 +110,8 @@ export default function AppFunctional(props) {
         setMessage(err.response.data.message);
       });
     setEmail(initialEmail);
+    setIndex(initialIndex);
+    setSteps(initialSteps);
   }
 
   // useEffect hooks
